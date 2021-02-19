@@ -23,6 +23,9 @@ sfrAddresses = {}
 
 
 replacements = OrderedDict([
+	('UINT8PV', 'volatile __pdata uint8_t'),
+	('UINT8XV', 'volatile __xdata uint8_t'),
+
 	('UINT8X',	'__xdata uint8_t'),
 	('UINT16X',	'__xdata uint16_t'),
 	('UINT24X',	'__xdata uuint24_t'),
@@ -65,7 +68,7 @@ with open(inputFileName) as inputFile:
 	for line in inputFile:
 		# do token replacment
 		for i, j in replacements.iteritems():
-        		line = line.replace(i, j)
+			line = line.replace(i, j)
 
 		words = line.split()
 
@@ -119,6 +122,20 @@ with open(inputFileName) as inputFile:
 
 			outputFile.write(sbitLine + '\n')
 
+		elif (('_at_') in words):
+			atIndex = words.index('_at_')
+			if ((atIndex+1)<len(words) and words[atIndex+1][-1]==';'):
+				if (('uint8_t') in words):
+					uint8tIndex = words.index('uint8_t')
+					addressVarLine = ' '.join(words[:uint8tIndex]) + ' __at(' + words[atIndex+1].replace(';','') + ') ' + ' '.join(words[uint8tIndex:atIndex]) + ';';
+					addressVarLine +=  '\t' + ' '.join(words[atIndex+2:])
+					
+					outputFile.write(addressVarLine + '\n')
+				else:
+					outputFile.write(line)
+			else:
+				outputFile.write(line)
+			
 		else:
 			# We don't understand the line, so pass it through
 			outputFile.write(line)
